@@ -1,0 +1,280 @@
+/* ============================================================
+   APIRENTAL — Modern Deep Premium Design System
+   Indigo accent · cool near-black surfaces · Stripe-inspired
+   (Accent vars keep the --gold* names so the whole app inherits
+    them; the live Tweaks panel repoints these at runtime.)
+   ============================================================ */
+
+:root {
+  /* Surfaces — cool near-black, high-contrast */
+  --bg:        #07080d;
+  --bg-2:      #0c0e15;
+  --surface:   #12141d;
+  --surface-2: #191c27;
+  --elevated:  #222634;
+  --hairline:  rgba(150, 160, 200, 0.15);
+  --hairline-soft: rgba(170, 180, 215, 0.08);
+
+  /* Accent — royal purple (var names kept as --gold* for inheritance) */
+  --gold:      #8b5cf6;
+  --gold-hi:   #a78bfa;
+  --gold-dim:  #6d28d9;
+  --gold-glow: rgba(139, 92, 246, 0.24);
+  --gold-ink:  #ffffff;   /* readable text on solid accent fills */
+
+  /* Text — cool whites */
+  --text:      #f4f6fb;
+  --text-2:    #a6acc2;
+  --text-3:    #6c7286;
+
+  /* Feedback */
+  --green:     #3ddc97;
+  --red:       #f0676a;
+  --amber:     #f4b955;
+
+  /* Type */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body:    'Manrope', system-ui, sans-serif;
+  --font-mono:    'Space Mono', ui-monospace, monospace;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r:    14px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+
+  /* Shadow */
+  --shadow:    0 18px 50px -18px rgba(0,0,0,0.7);
+  --shadow-lg: 0 40px 90px -30px rgba(0,0,0,0.85);
+
+  /* Theme-specific glass surfaces (overridden in light) */
+  --header-bg: rgba(7,8,13,0.82);
+  --glass:     rgba(7,8,13,0.6);
+  --ph-1: #20232f;
+  --ph-2: #13151d;
+  --ph-3: #0c0e14;
+  --ph-stripe: rgba(140,150,200,0.05);
+  --scrim: rgba(4,5,9,0.74);
+}
+
+/* ============================================================
+   LIGHT THEME — cool neutral
+   ============================================================ */
+:root[data-theme="light"] {
+  --bg:        #f5f6f9;
+  --bg-2:      #eceef3;
+  --surface:   #ffffff;
+  --surface-2: #f3f4f8;
+  --elevated:  #ffffff;
+  --hairline:  rgba(40, 50, 90, 0.13);
+  --hairline-soft: rgba(30, 40, 80, 0.07);
+
+  --gold:      #7c3aed;
+  --gold-hi:   #8b5cf6;
+  --gold-dim:  #6d28d9;
+  --gold-glow: rgba(124, 58, 237, 0.16);
+  --gold-ink:  #ffffff;
+
+  --text:      #14161f;
+  --text-2:    #4e5466;
+  --text-3:    #888ea1;
+
+  --green:     #18a06a;
+  --red:       #d6453a;
+  --amber:     #c2851a;
+
+  --shadow:    0 18px 50px -22px rgba(30,35,70,0.20);
+  --shadow-lg: 0 40px 90px -34px rgba(30,35,70,0.26);
+
+  --header-bg: rgba(245,246,249,0.85);
+  --glass:     rgba(255,255,255,0.72);
+  --ph-1: #e6e8ef;
+  --ph-2: #dadde6;
+  --ph-3: #cfd3df;
+  --ph-stripe: rgba(60,70,120,0.06);
+  --scrim: rgba(20,25,45,0.42);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color .4s ease, color .4s ease;
+}
+
+body { overflow-x: hidden; }
+
+button, input, select, textarea { font-family: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
+a { color: inherit; text-decoration: none; }
+
+::selection { background: var(--gold-glow); color: var(--gold-hi); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #262935; border-radius: 10px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: #343845; }
+
+/* Eyebrow / overline */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Display heading helper */
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+/* Gold gradient text */
+.gold-text {
+  background: linear-gradient(120deg, var(--gold-hi), var(--gold) 40%, var(--gold-dim));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-right: 0.08em;
+}
+
+/* Striped image placeholder */
+.ph {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--ph-stripe) 0px,
+      var(--ph-stripe) 2px,
+      transparent 2px,
+      transparent 11px
+    ),
+    radial-gradient(120% 100% at 70% 20%, var(--ph-1) 0%, var(--ph-2) 60%, var(--ph-3) 100%);
+}
+.ph::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 14px; bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(244,246,251,0.3);
+}
+
+/* User-fillable car photo slots (image-slot web component) */
+image-slot::part(frame) {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--ph-stripe) 0px,
+      var(--ph-stripe) 2px,
+      transparent 2px,
+      transparent 11px
+    ),
+    radial-gradient(120% 100% at 70% 20%, var(--ph-1) 0%, var(--ph-2) 60%, var(--ph-3) 100%);
+}
+image-slot::part(ring) {
+  border: 1.5px dashed var(--gold-dim);
+}
+
+/* Focus ring */
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Fade/scale transition utility */
+.fade-in { animation: fadeIn 0.5s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+.pop-in { animation: popIn 0.32s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.96) translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.9s linear infinite; transform-origin: center; }
+
+/* Locations map — pin pulse */
+@keyframes pinPulse {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  70%  { transform: scale(2.6); opacity: 0; }
+  100% { opacity: 0; }
+}
+.loc-pin-ring { animation: pinPulse 2.4s cubic-bezier(.2,.7,.2,1) infinite; }
+
+@keyframes chatDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Featured slider track — hide scrollbar (arrows drive it) */
+.feat-track { scrollbar-width: none; -ms-overflow-style: none; }
+.feat-track::-webkit-scrollbar { display: none; }
+
+/* ============================================================
+   LOGIN — Stripe-style aurora gradient backdrop
+   ============================================================ */
+.login-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.login-aurora::before,
+.login-aurora::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  will-change: transform;
+}
+.login-aurora::before {
+  width: 60vw; height: 60vw;
+  max-width: 760px; max-height: 760px;
+  top: -22vh; left: -10vw;
+  background: radial-gradient(circle, var(--gold), transparent 62%);
+  animation: auroraA 18s ease-in-out infinite alternate;
+}
+.login-aurora::after {
+  width: 52vw; height: 52vw;
+  max-width: 640px; max-height: 640px;
+  bottom: -26vh; right: -12vw;
+  background: radial-gradient(circle, var(--gold-dim), transparent 64%);
+  animation: auroraB 22s ease-in-out infinite alternate;
+}
+/* fine grid overlay for depth */
+.login-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--hairline-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline-soft) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(circle at 50% 38%, #000 0%, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 38%, #000 0%, transparent 72%);
+  opacity: 0.5;
+}
+@keyframes auroraA {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(8vw, 6vh) scale(1.12); }
+}
+@keyframes auroraB {
+  from { transform: translate(0, 0) scale(1.05); }
+  to   { transform: translate(-7vw, -5vh) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-aurora::before, .login-aurora::after { animation: none; }
+}
