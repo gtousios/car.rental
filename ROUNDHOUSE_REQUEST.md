@@ -1,84 +1,153 @@
-# Re-implement the frontend to match the imported design EXACTLY
+# Rebuild Apirental with 100% design fidelity — full scope, real backend
 
-## Context
+## Why this run is different
 
-A previous job already built a full working car rental app in this repo:
-Node/Express + Prisma/PostgreSQL backend (`backend/`), a React/Vite/Tailwind
-frontend (`frontend/`), and a working `docker-compose.yml`. It runs correctly
-end-to-end (verified: `docker compose up` boots db+backend+frontend, auth
-works, cars/bookings CRUD works against real data).
+Two previous attempts at this task drifted from the source design because the
+build environment could not reach the `claude_design` MCP tool, so the design
+was paraphrased/reinvented from memory instead of copied. That gap is now
+closed: **this repository contains the literal, complete design source**,
+fetched directly from the design project, under `design-source/`. Do not
+re-fetch or reinterpret the design — `design-source/` **is** the design.
+Read `design-source/CLAUDE.md` first; it is the design's own architecture
+document and is authoritative for conventions, file responsibilities, data
+shapes, and pricing formulas.
 
-**The problem: the frontend does NOT match the source design closely enough.**
-The previous attempt treated `Apirental.html` as loose inspiration and
-free-styled the UI instead of reproducing it faithfully. This run must fix
-that — the frontend must match the design **exactly**, not "in the spirit of."
+## What Apirental actually is
 
-## Step 1 — Import the design (again, carefully)
+Read `design-source/CLAUDE.md` in full before doing anything else. Summary:
+Apirental is a **luxury/exotic car rental platform** for Athens & Thessaloniki,
+EUR-priced, with:
 
-Use the `claude_design` MCP (`https://api.anthropic.com/v1/design/mcp`,
-authenticate via `/design-login` if needed) to import:
+- A **customer site**: marketing home, browsable fleet with filters, car
+  detail with specs/reviews, a 4-step booking flow (trip → extras → driver
+  details → payment) with loyalty-tier discounts, promo codes, loyalty-point
+  redemption, and an optional keyless-entry add-on, a locations page with an
+  interactive map, a "how it works" page, a concierge/contact page, "My
+  Trips" (view/cancel/modify bookings, leave reviews), and a rule-based chat
+  concierge widget that answers from live fleet/pricing data (deterministic
+  JS logic — **not** a real LLM call; see `customer.jsx`'s `buildChatKnowledge`
+  / `computePriceFacts`, keep this the same way).
+- A **staff admin console**: dashboard (revenue, fleet mix, top performers,
+  peak demand), fleet CRUD, an availability calendar, a maintenance tracker,
+  damage reports, customer directory with booking history, reviews
+  moderation, promo-code management, a notifications log (simulated
+  email/SMS), and a printable daily pickup/return run sheet.
+- **7 languages** (en, el, de, fr, pt, es, bg) — every user-facing string
+  goes through `t("key")`, exactly as implemented in `i18n.jsx` +
+  `i18n-eldebg.jsx` + `i18n-frptesbg.jsx`.
+- **Light/dark theme** toggle, EUR pricing, the exact visual design system in
+  `design-source/styles.css` (CSS variables — colors, radii, shadows, type).
 
-https://claude.ai/design/p/7253f2ac-9ac4-44f9-b79f-044fd37fdd74?file=Apirental.html
+## Step 1 — Study the ground truth
 
-Fetch the **actual `Apirental.html` file contents** (full HTML/CSS/markup),
-not a paraphrase or summary of it. This file is the literal source of truth.
+Read every file in `design-source/` before writing code:
+`CLAUDE.md`, `Apirental.html`, `styles.css`, `data.jsx`, `i18n.jsx`,
+`i18n-eldebg.jsx`, `i18n-frptesbg.jsx`, `components.jsx`, `customer.jsx`,
+`browse.jsx`, `booking.jsx`, `pages.jsx`, `admin.jsx`, `admin-fleet.jsx`,
+`notifications.jsx`, `app.jsx`.
 
-## Step 2 — Reproduce it EXACTLY
+Two files in `design-source/` are **design-tool scaffolding, not product
+features** — do not port their runtime behavior:
+- `tweaks-panel.jsx` — a floating "Tweaks" panel for live-editing the accent
+  color inside the design tool's preview iframe. Skip it entirely; just hard-
+  code the default accent (`#8b5cf6` / `#a78bfa` / `#6d28d9`, see
+  `app.jsx`'s `ACCENT_PALETTES[0]`) as the fixed theme accent.
+- `image-slot.js` — a drag-and-drop image-upload custom element that
+  persists via a `window.omelette` bridge that only exists inside the design
+  tool. In production there is no such bridge. Where `CarImage` (in
+  `components.jsx`) falls back to `<image-slot>` for secondary photos
+  (interior/rear/detail thumbnails on the car detail page, and the car
+  editor preview), replace those specific spots with plain static images or
+  simple styled placeholders — do not reimplement the drag/pan/zoom/reframe
+  runtime.
 
-For every page/section/component present in `Apirental.html`:
+Everything else — every component, every page, every string key, every CSS
+token, every pricing/loyalty/promo formula — is real product behavior and
+must be preserved exactly.
 
-- Match the **exact DOM structure**: same sections, same nesting, same order
-  of elements.
-- Match the **exact visual styling**: colors (use the literal hex/rgb values
-  from the design, don't approximate or substitute a "close enough" palette),
-  fonts and font sizes/weights, spacing, border-radius, shadows, gradients,
-  breakpoints.
-- Match the **exact copy/text content**: headings, labels, button text,
-  placeholder text — verbatim from the design, not paraphrased.
-- Match the **exact layout and component composition**: same hero section,
-  same nav/header layout, same card designs, same grid/flex structure, same
-  icons/imagery placement.
-- If `Apirental.html` uses specific CSS (inline `<style>`, utility classes,
-  custom classes), carry those exact values into the React implementation
-  (e.g. as Tailwind config tokens, CSS variables, or component styles) —
-  do not invent your own visual system in its place.
-- Do NOT add sections, pages, or UI elements that aren't in the design. Do
-  NOT drop or simplify sections that are in the design.
+## Step 2 — Frontend: port to a real toolchain, pixel/behavior-exact
 
-This is a **pixel-fidelity reimplementation** task, not a "redesign inspired
-by." If something in the design is ambiguous (e.g. an interaction not fully
-specified in static HTML), make the smallest reasonable choice that preserves
-the visual design — do not use it as license to redesign.
+Build a React + TypeScript + Vite + Tailwind (or plain CSS using the exact
+`styles.css` variables — your choice, as long as the visual output is
+pixel-identical) frontend that reproduces `design-source/` faithfully:
 
-## Step 3 — Keep it wired to the real backend
+- Match the **exact DOM structure, layout, and visual design** — colors,
+  typography, spacing, radii, shadows, animations — using the literal values
+  in `styles.css`. Support both the dark and light themes exactly as defined
+  there (`:root` and `:root[data-theme="light"]`).
+- Match the **exact copy** in all 7 languages. Port the i18n system (`t()`,
+  `useT()`, `LangProvider`, the `tx*` value-translation helpers) and all
+  string tables verbatim — do not paraphrase or drop languages.
+- Match **every page and flow**: home, browse (with all filters), car
+  detail (specs, highlights, reviews), booking flow (all 4 steps + loyalty/
+  promo/keyless math exactly as in `booking.jsx`'s `priceBooking`), locations
+  page with the stylized map, how-it-works, concierge/contact, My Trips
+  (cancel/modify/review), and the full admin console (dashboard, fleet CRUD,
+  availability calendar, maintenance tracker, damage reports, customers,
+  reviews moderation, promo codes, notifications log, daily run sheet).
+- Reproduce the booking pricing/loyalty/promo formulas **exactly** as
+  documented in `CLAUDE.md` and implemented in `booking.jsx` — these are
+  precise arithmetic (8% taxes & fees, loyalty tier discounts, promo
+  percent/fixed discounts, points redemption, keyless fee) and must match to
+  the cent.
+- Real car photos: the design ships `photos.jsx` (base64, not included here
+  because it's a large generated asset) — since you don't have it, source
+  reasonable free-to-use stock photos (e.g. Unsplash) per car brand/model
+  instead, keeping the same `CarImage` component contract.
 
-The existing backend (`backend/`) already implements the full API (auth,
-cars, bookings, locations, admin, users) and already works — do not rewrite
-it unless a specific frontend requirement genuinely requires a backend change
-(e.g. a field or endpoint shown in the design that the current API doesn't
-expose). Every interactive element in the reproduced design (search, filters,
-booking flow, login/signup, dashboard, admin panel) must call the real
-backend API — no mocked data, consistent with the existing implementation.
+## Step 3 — Backend: real persistence, not localStorage
 
-## Step 4 — Docker stays working
+The prototype's "database" is `localStorage` (see `app.jsx`'s `DB_KEYS` /
+`dbLoad` / `dbSave` — explicitly called out in `CLAUDE.md` as a known
+prototype shortcut). Replace it with a real backend:
 
-`docker-compose.yml`, the backend `Dockerfile`, and the frontend `Dockerfile`
-already work — after your changes, `docker compose up --build` must still
-bring up a fully working, seeded app with the new pixel-accurate frontend.
-Update the frontend `Dockerfile`/build only if your dependency changes
-require it (e.g. new packages for fonts/icons used by the design).
+- **Node.js + Express (TypeScript) + PostgreSQL via Prisma.**
+- Model every entity from `CLAUDE.md`'s "State & data shapes" section and
+  `data.jsx`'s seed data: Vehicle/Car, Location, Addon, Customer, Booking,
+  Review, Promo, Maintenance record, Damage report, Notification log entry.
+  Keep field names and semantics equivalent to the prototype's shapes so the
+  frontend port maps cleanly.
+- Real JWT-based auth for customers (signup/login/sign-out) and a separate
+  staff login for the admin console (the prototype's `STAFF_CREDS` hardcoded
+  check should become a real staff user with a hashed password — seed one
+  demo admin).
+- Booking creation must enforce the same availability-conflict logic as
+  `carConflicts`/`isCarAvailable` in `components.jsx` (no double-booking
+  overlapping date ranges).
+- Seed the database with the exact fleet from `data.jsx` (18 cars, all
+  fields), the 8 locations from `LOCATION_INFO`, the 6 add-ons, the seeded
+  reviews, and the 5 promo codes — so the app is immediately explorable.
+- The chat concierge's knowledge (`buildChatKnowledge`/`computePriceFacts`
+  in `customer.jsx`) should read from the real backend's live data, not
+  hardcoded arrays.
+
+## Step 4 — Docker
+
+Provide `docker-compose.yml` + Dockerfiles for frontend, backend, and
+PostgreSQL, so `docker compose up --build` alone yields a fully working,
+migrated, and seeded app with no manual steps. Include a `.env.example` with
+working local defaults and a top-level `README.md` documenting how to run it,
+default ports, and demo credentials (a customer account and the staff admin
+account).
 
 ## Acceptance criteria
 
-- Side-by-side, the running app's pages visually match `Apirental.html`
-  section-for-section, color-for-color, copy-for-copy — not an
-  approximation or a "similar" redesign.
-- `docker compose up --build` still yields a fully working app: real backend,
-  real database, all flows (browse, book, auth, dashboard, admin) functional
-  against real data.
-- No regression to backend functionality that already worked.
+- Side-by-side against `design-source/Apirental.html` rendered in a browser
+  (open it directly — it's a runnable static prototype, no build step
+  needed), the rebuilt app matches section-for-section, color-for-color,
+  copy-for-copy, in **every one of the 7 languages** and **both themes** —
+  not an approximation.
+- Every flow actually works end-to-end against the real backend/database:
+  browse → detail → book (with extras/loyalty/promo/keyless) → confirmation
+  → My Trips (cancel/modify/review) → and the full admin console (fleet
+  CRUD, calendar, maintenance, damage, customers, reviews, promos,
+  notifications, run sheet).
+- `docker compose up --build` boots a fully working, seeded app with zero
+  manual setup.
+- No hardcoded/mocked data at runtime — everything flows through the API
+  and database.
 
 ## Deliverable
 
-Commit the corrected frontend implementation to this repository as a
-patch/branch, ready to review as a PR.
+Commit the full implementation (frontend, backend, Docker setup, docs) to
+this repository as a patch/branch, ready to review as a PR.
